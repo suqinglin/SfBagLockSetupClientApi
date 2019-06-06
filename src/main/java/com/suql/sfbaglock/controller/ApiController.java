@@ -41,7 +41,6 @@ public class ApiController {
 
     @PostMapping("/box/import")
     public ResponseData uploadCsv(@RequestBody MultipartFile file) {
-        ResponseData result = ResponseData.success();
-        return result;
+        return ResponseData.success();
     }
 }
