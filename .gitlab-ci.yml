@@ -1,0 +1,27 @@
+stages:
+- build
+- deploy
+
+variables:
+  APP: bag-lock-api
+  ## 阿里云docker 服务
+  ALIYUN_DOCKER_REGISTRY: registry.cn-beijing.aliyuncs.com
+  ALIYUN_API_DOCKER_IMAGE: $ALIYUN_DOCKER_REGISTRY/nexless/$APP:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID-$CI_COMMIT_SHA
+
+build:maven:
+  stage: build
+  image: registry.baota.io/wallbase/maven:3.5.4-jdk-8-alpine-docker
+  before_script:
+  - mkdir -p /root/.m2
+  - wget https://storage.baota.io/settings.xml && mv settings.xml /root/.m2/
+  - docker login -u $ALIYUN_DOCKER_USER -p $ALIYUN_DOCKER_PASSWORD $ALIYUN_DOCKER_REGISTRY
+  script:
+  - mvn package -DskipTests -U -e -B
+  ## app api
+  - docker build -t $ALIYUN_API_DOCKER_IMAGE .
+  - docker push $ALIYUN_API_DOCKER_IMAGE
+  - docker tag $ALIYUN_API_DOCKER_IMAGE $ALIYUN_DOCKER_REGISTRY/nexless/$APP:latest
+  - docker push $ALIYUN_DOCKER_REGISTRY/nexless/$APP:latest
+  only:
+  - master
+
